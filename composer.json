@@ -1,7 +1,6 @@
 {
     "name": "upsoftware/auth",
     "description": "Authentication system",
-    "type": "composer-plugin",
     "autoload": {
         "psr-4": {
             "Upsoftware\\Auth\\": "src/"
@@ -12,5 +11,12 @@
             "name": "UpSoftware",
             "email": "info@upsoftware.tech"
         }
-    ]
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Upsoftware\\Auth\\Providers\\AuthServiceProvider"
+            ]
+        }
+    }
 }
