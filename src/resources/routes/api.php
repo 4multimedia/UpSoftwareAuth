@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Session\Middleware\StartSession;
 
-Route::post('/login', LoginController::class)->name('login');
-Route::post('/otp', OtpController::class)->name('login');
+Route::prefix('login')->middleware([StartSession::class])->group(function () {
+    Route::post('/', 'LoginController@login')->name('login');
+    Route::post('/validate', 'LoginController@validate')->name('login.validate');
+});
