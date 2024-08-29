@@ -10,7 +10,7 @@ use Upsoftware\Auth\Contracts\Requests\LoginUserOtp;
 use Upsoftware\Auth\Enums\OtpKind;
 use Upsoftware\Auth\Models\User;
 
-class LogInController extends Controller
+class LoginController extends Controller
 {
     /**
      * Handle the incoming request.
