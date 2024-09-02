@@ -28,21 +28,21 @@ class RegisterController extends Controller
                     $groupedData = [];
                     foreach ($field as $subfield => $mappedField) {
                         if (is_int($subfield)) {
-                            // Przypadek, gdy klucz i wartość są takie same
+                            // Przypadek, gdy klucz i wartość są takie same (np. 'town')
                             $subfield = $mappedField;
                         }
 
                         // Pobieramy wartość z requesta albo z wartości domyślnych
-                        $groupedData[$mappedField] = $request->input($subfield) ?? ($defaultValues[$mappedField] ?? null);
+                        $groupedData[$subfield] = $request->input($mappedField) ?? ($defaultValues[$subfield] ?? null);
                     }
                     $result[$key] = $groupedData;
                 } else {
                     // Obsługa mapowania pól nie-grupowych
                     if (is_int($key)) {
-                        // Przypadek, gdy klucz i wartość są takie same (np. 'town')
+                        // Klucz i wartość są takie same
                         $result[$field] = $request->input($field) ?? ($defaultValues[$field] ?? null);
                     } else {
-                        // Normalne mapowanie pól (np. 'street' => 'address')
+                        // Klucz mapowany na inną nazwę (np. 'name' => 'firstname')
                         $result[$key] = $request->input($field) ?? ($defaultValues[$key] ?? null);
                     }
                 }
@@ -51,7 +51,7 @@ class RegisterController extends Controller
             return $result;
         };
 
-        // Wykonaj funkcję przetwarzającą dodatkowe pola
+        // Przetwarzamy dodatkowe pola
         $additionalData = $processFields($config, $requestData, $defaultValues);
 
         // Konwertowanie pozostałych danych na JSON i dodanie do wynikowej tablicy
