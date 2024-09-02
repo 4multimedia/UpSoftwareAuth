@@ -11,7 +11,7 @@ use Upsoftware\Auth\Models\User;
 class RegisterController extends Controller
 {
     protected function userData(RegisterUser $request): array {
-        // Pobranie dodatkowych pól z konfiguracji
+        // Pobranie dodatkowych pól i domyślnych wartości z konfiguracji
         $additionalFields = config('upsoftware.register_fields_table', []);
         $defaultValues = config('upsoftware.register_default_values', []);
 
@@ -19,7 +19,7 @@ class RegisterController extends Controller
         $additionalData = [];
 
         // Rekurencyjna funkcja do przetwarzania pól
-        $processFields = function($fields, $requestData, $defaultValues) use (&$processFields) {
+        $processFields = function($fields, &$requestData, $defaultValues) use (&$processFields) {
             $result = [];
 
             foreach ($fields as $key => $field) {
@@ -28,16 +28,16 @@ class RegisterController extends Controller
                         // Jeżeli $field jest prostą tablicą
                         $groupedData = [];
                         foreach ($field as $subfield) {
-                            $groupedData[$subfield] = $requestData[$subfield] ?? ($defaultValues[$subfield] ?? null);
+                            $groupedData[$subfield] = isset($requestData[$subfield]) ? $requestData[$subfield] : ($defaultValues[$subfield] ?? null);
                             unset($requestData[$subfield]);
                         }
-                        $result[$key] = $groupedData;
+                        $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
                     } else {
                         // Jeżeli $field jest tablicą z mapowaniem
                         $groupedData = [];
                         foreach ($field as $subfield => $mappedField) {
                             $actualField = is_int($subfield) ? $mappedField : $subfield;
-                            $groupedData[$mappedField] = $requestData[$actualField] ?? ($defaultValues[$mappedField] ?? null);
+                            $groupedData[$mappedField] = isset($requestData[$actualField]) ? $requestData[$actualField] : ($defaultValues[$mappedField] ?? null);
                             unset($requestData[$actualField]);
                         }
                         $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
@@ -50,7 +50,7 @@ class RegisterController extends Controller
                         $field = $field;
                     }
 
-                    $result[$mappedField] = $requestData[$field] ?? ($defaultValues[$mappedField] ?? null);
+                    $result[$mappedField] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$mappedField] ?? null);
                     unset($requestData[$field]);
                 }
             }
@@ -58,6 +58,7 @@ class RegisterController extends Controller
             return $result;
         };
 
+        // Wykonaj funkcję przetwarzającą dodatkowe pola
         $additionalData = $processFields($additionalFields, $requestData, $defaultValues);
 
         // Konwertowanie pozostałych danych na JSON i dodanie do wynikowego tablicy
