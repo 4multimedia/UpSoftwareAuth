@@ -12,7 +12,7 @@ class RegisterController extends Controller
 {
     protected function userData(RegisterUser $request): array {
         // Pobranie dodatkowych pól z konfiguracji
-        $additionalFields = config('upsoftware.register_fields_table');
+        $additionalFields = config('upsoftware.register_fields_table', []);
 
         // Zbiór wszystkich kluczy z requestu
         $requestData = $request->all();
