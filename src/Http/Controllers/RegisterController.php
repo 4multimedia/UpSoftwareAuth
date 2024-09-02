@@ -24,6 +24,8 @@ class RegisterController extends Controller
                     if ($request->has($subfield)) {
                         $groupedData[$subfield] = $request->$subfield;
                         unset($requestData[$subfield]);
+                    } else {
+                        $groupedData[$subfield] = null;
                     }
                 }
                 $additionalData[$key] = $groupedData;
