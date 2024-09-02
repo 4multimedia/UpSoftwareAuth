@@ -11,34 +11,48 @@ use Upsoftware\Auth\Models\User;
 class RegisterController extends Controller
 {
     protected function userData(RegisterUser $request): array {
+        // Pobranie dodatkowych pól z konfiguracji
         $additionalFields = config('upsoftware.register_fields_table', []);
 
         $requestData = $request->all();
-
         $additionalData = [];
 
         foreach ($additionalFields as $key => $field) {
             if (is_array($field)) {
                 $groupedData = [];
-                foreach ($field as $subfield) {
-                    if ($request->has($subfield)) {
-                        $groupedData[$subfield] = $request->$subfield;
-                        unset($requestData[$subfield]);
+                foreach ($field as $subfield => $mappedField) {
+                    // Jeśli klucz jest numerem (czyli brak mapowania), użyj wartości subfield jako klucza
+                    $actualField = is_int($subfield) ? $mappedField : $subfield;
+
+                    // Jeśli pole istnieje w request, dodaj je do groupedData
+                    if ($request->has($actualField)) {
+                        $groupedData[$mappedField] = $request->$actualField;
+                        unset($requestData[$actualField]);
                     } else {
-                        $groupedData[$subfield] = null;
+                        // Jeśli pole nie istnieje, ustaw je na null
+                        $groupedData[$mappedField] = null;
                     }
                 }
                 $additionalData[$key] = $groupedData;
             } else {
+                // Mapowanie pól nie-grupowych
+                $mappedField = $field;
+                if (is_string($key)) {
+                    // Jeśli klucz jest mapowany na inne pole
+                    $mappedField = $key;
+                    $field = $field;
+                }
+
                 if ($request->has($field)) {
-                    $additionalData[$field] = $request->$field;
+                    $additionalData[$mappedField] = $request->$field;
                     unset($requestData[$field]);
                 } else {
-                    $additionalData[$field] = null;
+                    $additionalData[$mappedField] = null;
                 }
             }
         }
 
+        // Konwertowanie pozostałych danych na JSON i dodanie do wynikowego tablicy
         $dataForColumn = json_encode($requestData);
 
         return array_merge([
