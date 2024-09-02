@@ -34,7 +34,7 @@ class RegisterController extends Controller
                     }
                 }
                 // Zapisujemy dane jako JSON w kluczu głównym (np. company)
-                $additionalData[$key] = json_encode($groupedData);
+                $additionalData[$key] = $groupedData;
             } else {
                 // Jeśli pole nie jest tablicą, zapisujemy je bezpośrednio
                 if ($request->has($field)) {
