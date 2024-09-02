@@ -19,34 +19,32 @@ class RegisterController extends Controller
         $additionalData = [];
 
         // Rekurencyjna funkcja do przetwarzania pól
-        $processFields = function($fields, $requestData, $defaultValues) use (&$processFields) {
+        $processFields = function($fields, $requestData, $defaultValues) use (&$processFields, $request) {
             $result = [];
 
             foreach ($fields as $key => $field) {
                 if (is_array($field)) {
-                    // Przypadek dla tablic z mapowaniem lub zagnieżdżonych tablic
+                    // Obsługa zagnieżdżonych tablic
                     $groupedData = [];
                     foreach ($field as $subfield => $mappedField) {
                         if (is_int($subfield)) {
-                            // Dla prostych tablic, gdzie klucze są wartościami (np. 'town' => 'town')
+                            // Przypadek, gdy klucz i wartość są takie same
                             $subfield = $mappedField;
-                            $mappedField = $subfield;
                         }
 
-                        $groupedData[$mappedField] = isset($requestData[$subfield]) ? $requestData[$subfield] : ($defaultValues[$mappedField] ?? null);
-                        unset($requestData[$subfield]);
+                        // Pobieramy wartość z requesta albo z wartości domyślnych
+                        $groupedData[$mappedField] = $request->input($subfield) ?? ($defaultValues[$mappedField] ?? null);
                     }
-                    $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
+                    $result[$key] = $groupedData;
                 } else {
-                    // Mapowanie pól nie-grupowych
+                    // Obsługa mapowania pól nie-grupowych
                     if (is_int($key)) {
                         // Przypadek, gdy klucz i wartość są takie same (np. 'town')
-                        $result[$field] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$field] ?? null);
+                        $result[$field] = $request->input($field) ?? ($defaultValues[$field] ?? null);
                     } else {
                         // Normalne mapowanie pól (np. 'street' => 'address')
-                        $result[$key] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$key] ?? null);
+                        $result[$key] = $request->input($field) ?? ($defaultValues[$key] ?? null);
                     }
-                    unset($requestData[$field]);
                 }
             }
 
