@@ -11,46 +11,41 @@ use Upsoftware\Auth\Models\User;
 class RegisterController extends Controller
 {
     protected function userData(RegisterUser $request): array {
-        // Pobranie dodatkowych pól i domyślnych wartości z konfiguracji
-        $additionalFields = config('upsoftware.register_fields_table', []);
+        // Pobranie dodatkowych pól z konfiguracji
+        $config = config('upsoftware.register_fields_table', []);
         $defaultValues = config('upsoftware.register_default_values', []);
 
         $requestData = $request->all();
         $additionalData = [];
 
         // Rekurencyjna funkcja do przetwarzania pól
-        $processFields = function($fields, &$requestData, $defaultValues) use (&$processFields) {
+        $processFields = function($fields, $requestData, $defaultValues) use (&$processFields) {
             $result = [];
 
             foreach ($fields as $key => $field) {
                 if (is_array($field)) {
-                    if (array_values($field) === $field) {
-                        // Jeżeli $field jest prostą tablicą
-                        $groupedData = [];
-                        foreach ($field as $subfield) {
-                            $groupedData[$subfield] = isset($requestData[$subfield]) ? $requestData[$subfield] : ($defaultValues[$subfield] ?? null);
-                            unset($requestData[$subfield]);
+                    // Przypadek dla tablic z mapowaniem lub zagnieżdżonych tablic
+                    $groupedData = [];
+                    foreach ($field as $subfield => $mappedField) {
+                        if (is_int($subfield)) {
+                            // Dla prostych tablic, gdzie klucze są wartościami (np. 'town' => 'town')
+                            $subfield = $mappedField;
+                            $mappedField = $subfield;
                         }
-                        $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
-                    } else {
-                        // Jeżeli $field jest tablicą z mapowaniem
-                        $groupedData = [];
-                        foreach ($field as $subfield => $mappedField) {
-                            $actualField = is_int($subfield) ? $mappedField : $subfield;
-                            $groupedData[$mappedField] = isset($requestData[$actualField]) ? $requestData[$actualField] : ($defaultValues[$mappedField] ?? null);
-                            unset($requestData[$actualField]);
-                        }
-                        $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
+
+                        $groupedData[$mappedField] = isset($requestData[$subfield]) ? $requestData[$subfield] : ($defaultValues[$mappedField] ?? null);
+                        unset($requestData[$subfield]);
                     }
+                    $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
                 } else {
                     // Mapowanie pól nie-grupowych
-                    $mappedField = $field;
-                    if (is_string($key)) {
-                        $mappedField = $key;
-                        $field = $field;
+                    if (is_int($key)) {
+                        // Przypadek, gdy klucz i wartość są takie same (np. 'town')
+                        $result[$field] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$field] ?? null);
+                    } else {
+                        // Normalne mapowanie pól (np. 'street' => 'address')
+                        $result[$key] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$key] ?? null);
                     }
-
-                    $result[$mappedField] = isset($requestData[$field]) ? $requestData[$field] : ($defaultValues[$mappedField] ?? null);
                     unset($requestData[$field]);
                 }
             }
@@ -59,9 +54,9 @@ class RegisterController extends Controller
         };
 
         // Wykonaj funkcję przetwarzającą dodatkowe pola
-        $additionalData = $processFields($additionalFields, $requestData, $defaultValues);
+        $additionalData = $processFields($config, $requestData, $defaultValues);
 
-        // Konwertowanie pozostałych danych na JSON i dodanie do wynikowego tablicy
+        // Konwertowanie pozostałych danych na JSON i dodanie do wynikowej tablicy
         $dataForColumn = json_encode($requestData);
 
         return array_merge([
