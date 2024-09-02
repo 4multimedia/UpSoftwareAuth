@@ -13,44 +13,52 @@ class RegisterController extends Controller
     protected function userData(RegisterUser $request): array {
         // Pobranie dodatkowych pól z konfiguracji
         $additionalFields = config('upsoftware.register_fields_table', []);
+        $defaultValues = config('upsoftware.register_default_values', []);
 
         $requestData = $request->all();
         $additionalData = [];
 
-        foreach ($additionalFields as $key => $field) {
-            if (is_array($field)) {
-                $groupedData = [];
-                foreach ($field as $subfield => $mappedField) {
-                    // Jeśli klucz jest numerem (czyli brak mapowania), użyj wartości subfield jako klucza
-                    $actualField = is_int($subfield) ? $mappedField : $subfield;
+        // Rekurencyjna funkcja do przetwarzania pól
+        $processFields = function($fields, $requestData, $defaultValues) use (&$processFields) {
+            $result = [];
 
-                    // Jeśli pole istnieje w request, dodaj je do groupedData
-                    if ($request->has($actualField)) {
-                        $groupedData[$mappedField] = $request->$actualField;
-                        unset($requestData[$actualField]);
+            foreach ($fields as $key => $field) {
+                if (is_array($field)) {
+                    if (array_values($field) === $field) {
+                        // Jeżeli $field jest prostą tablicą
+                        $groupedData = [];
+                        foreach ($field as $subfield) {
+                            $groupedData[$subfield] = $requestData[$subfield] ?? ($defaultValues[$subfield] ?? null);
+                            unset($requestData[$subfield]);
+                        }
+                        $result[$key] = $groupedData;
                     } else {
-                        // Jeśli pole nie istnieje, ustaw je na null
-                        $groupedData[$mappedField] = null;
+                        // Jeżeli $field jest tablicą z mapowaniem
+                        $groupedData = [];
+                        foreach ($field as $subfield => $mappedField) {
+                            $actualField = is_int($subfield) ? $mappedField : $subfield;
+                            $groupedData[$mappedField] = $requestData[$actualField] ?? ($defaultValues[$mappedField] ?? null);
+                            unset($requestData[$actualField]);
+                        }
+                        $result[$key] = $processFields($groupedData, $requestData, $defaultValues);
                     }
-                }
-                $additionalData[$key] = $groupedData;
-            } else {
-                // Mapowanie pól nie-grupowych
-                $mappedField = $field;
-                if (is_string($key)) {
-                    // Jeśli klucz jest mapowany na inne pole
-                    $mappedField = $key;
-                    $field = $field;
-                }
-
-                if ($request->has($field)) {
-                    $additionalData[$mappedField] = $request->$field;
-                    unset($requestData[$field]);
                 } else {
-                    $additionalData[$mappedField] = null;
+                    // Mapowanie pól nie-grupowych
+                    $mappedField = $field;
+                    if (is_string($key)) {
+                        $mappedField = $key;
+                        $field = $field;
+                    }
+
+                    $result[$mappedField] = $requestData[$field] ?? ($defaultValues[$mappedField] ?? null);
+                    unset($requestData[$field]);
                 }
             }
-        }
+
+            return $result;
+        };
+
+        $additionalData = $processFields($additionalFields, $requestData, $defaultValues);
 
         // Konwertowanie pozostałych danych na JSON i dodanie do wynikowego tablicy
         $dataForColumn = json_encode($requestData);
