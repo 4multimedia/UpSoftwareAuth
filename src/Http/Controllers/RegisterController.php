@@ -64,7 +64,6 @@ class RegisterController extends Controller
 
     public function register(RegisterUser $request)
     {
-        $this->validateAdditionalFields($request);
         try {
             $user = User::create($this->userData($request));
             $this->afterRegister($user, $request);
