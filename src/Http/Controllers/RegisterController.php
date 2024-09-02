@@ -11,16 +11,48 @@ use Upsoftware\Auth\Models\User;
 class RegisterController extends Controller
 {
     protected function userData(RegisterUser $request): array {
-        // Pobranie dodatkowych danych z konfiguracji
-        $additionalData = collect(config('upsoftware.register_additional_fields', []))
-            ->mapWithKeys(function ($rule, $field) use ($request) {
-                return [$field => $request->$field];
-            })->toArray();
+        // Pobranie dodatkowych pól z konfiguracji
+        $additionalFields = config('upsoftware.register_fields_table');
 
-        // Połączenie danych użytkownika z dodatkowymi polami
+        // Zbiór wszystkich kluczy z requestu
+        $requestData = $request->all();
+
+        // Inicjalizacja tablicy na dodatkowe dane użytkownika
+        $additionalData = [];
+        $dataForColumn = []; // Dane, które trafią do kolumny 'data'
+
+        // Iteracja po konfiguracji dodatkowych pól
+        foreach ($additionalFields as $key => $field) {
+            if (is_array($field)) {
+                // Jeśli pole jest tablicą (np. company), grupujemy je w JSON
+                $groupedData = [];
+                foreach ($field as $subfield) {
+                    if ($request->has($subfield)) {
+                        $groupedData[$subfield] = $request->$subfield;
+                        // Usuwamy z requestData, ponieważ pole ma pokrycie
+                        unset($requestData[$subfield]);
+                    }
+                }
+                // Zapisujemy dane jako JSON w kluczu głównym (np. company)
+                $additionalData[$key] = json_encode($groupedData);
+            } else {
+                // Jeśli pole nie jest tablicą, zapisujemy je bezpośrednio
+                if ($request->has($field)) {
+                    $additionalData[$field] = $request->$field;
+                    // Usuwamy z requestData, ponieważ pole ma pokrycie
+                    unset($requestData[$field]);
+                }
+            }
+        }
+
+        // Reszta danych, które nie miały pokrycia, trafi do kolumny 'data'
+        $dataForColumn = json_encode($requestData);
+
+        // Łączenie danych użytkownika z dodatkowymi polami
         return array_merge([
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'data' => $dataForColumn,  // Zapisanie pozostałych danych w kolumnie 'data'
         ], $additionalData);
     }
 
