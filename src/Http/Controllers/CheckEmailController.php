@@ -13,6 +13,7 @@ class CheckEmailController extends Controller
         $request->validate([
             'email' => ['required', 'email']
         ]);
-        return User::where('email', $request->email)->count() === 0 ? false : true;
+        $status = !(User::where('email', $request->email)->count() === 0);
+        return ['status' => $status];
     }
 }
