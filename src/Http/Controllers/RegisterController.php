@@ -64,16 +64,33 @@ class RegisterController extends Controller
         ], $additionalData);
     }
 
-    protected function afterRegister(User $user, RegisterUser $request) {
-        if (is_callable(config('upsoftware.register_actions_after'))) {
-            call_user_func(config('upsoftware.register_actions_after'), $user, $request);
+    protected function beforeRegister(RegisterUser $request) {
+        if (is_callable(config('upsoftware.before_register'))) {
+            call_user_func(config('upsoftware.before_register'), $request);
         }
+    }
+
+    protected function afterRegister(User $user, RegisterUser $request) {
+        if (is_callable(config('upsoftware.after_register'))) {
+            call_user_func(config('upsoftware.after_register'), $user, $request);
+        }
+    }
+
+    protected function storeUser(RegisterUser $request) {
+        if (is_callable(config('upsoftware.store_register'))) {
+            return call_user_func(config('upsoftware.store_register'), $request);
+        }
+        return null;
     }
 
     public function register(RegisterUser $request)
     {
         try {
-            $user = User::create($this->userData($request));
+            $this->beforeRegister($request);
+            $user = $this->storeUser($request);
+            if (!$user) {
+                $user = User::create($this->userData($request));
+            }
             $this->afterRegister($user, $request);
             return $user;
         } catch (\Exception $e) {
