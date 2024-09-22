@@ -14,3 +14,4 @@ Route::prefix('register')->middleware([StartSession::class])->group(function () 
     Route::post('/', 'RegisterController@register')->name('register');
 });
 
+ Route::post('/check-email', CheckEmailController::class)->name('check-email');
