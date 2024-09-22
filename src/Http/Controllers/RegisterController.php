@@ -97,7 +97,7 @@ class RegisterController extends Controller
                 $user = User::create($this->userData($request));
             }
 
-            if (is_callable([$this, 'afterRegister'])) {
+            if ($this->afterRegister($request)) {
                 $this->afterRegister($request, $user);
             }
             return $user;
