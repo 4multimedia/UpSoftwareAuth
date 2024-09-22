@@ -68,12 +68,14 @@ class RegisterController extends Controller
         if (is_callable(config('upsoftware.before_register'))) {
             call_user_func(config('upsoftware.before_register'), $request);
         }
+        return null;
     }
 
-    protected function afterRegister(User $user, RegisterUser $request) {
+    protected function afterRegister(RegisterUser $request, User $user = null) {
         if (is_callable(config('upsoftware.after_register'))) {
             call_user_func(config('upsoftware.after_register'), $user, $request);
         }
+        return null;
     }
 
     protected function storeUser(RegisterUser $request) {
@@ -86,12 +88,18 @@ class RegisterController extends Controller
     public function register(RegisterUser $request)
     {
         try {
-            $this->beforeRegister($request);
+            if (is_callable([$this, 'beforeRegister'])) {
+                $this->beforeRegister($request);
+            }
+
             $user = $this->storeUser($request);
             if (!$user) {
                 $user = User::create($this->userData($request));
             }
-            $this->afterRegister($user, $request);
+
+            if (is_callable([$this, 'afterRegister'])) {
+                $this->afterRegister($request, $user);
+            }
             return $user;
         } catch (\Exception $e) {
             return response(['error' => $e->getMessage()], 500);
