@@ -73,7 +73,7 @@ class Otp
     /**
      * @throws \Exception
      */
-    private function checkCodeIsAlreadyGenerate($retur): void
+    private function checkCodeIsAlreadyGenerate(): void
     {
         $validateTime = $this->calculateTime();
         if ($validateTime) {
