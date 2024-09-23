@@ -36,10 +36,7 @@ class Otp
         return $this->code = substr(str_shuffle(str_repeat($characters, $length)), 0, $length);
     }
 
-    /**
-     * @throws \Exception
-     */
-    private function checkCodeIsAlreadyGenerate(): void
+    private function calculateTime(): ?array
     {
         $retry_time = config('upsoftware.otp.retry_time', 5);
         $otp = OtpModel::where('kind', $this->kind)
@@ -47,6 +44,7 @@ class Otp
             ->where('phone', $this->phone)
             ->where('created_at', '>', (new \DateTime())->modify("-{$retry_time} minutes"))
             ->first();
+
         if ($otp) {
             $now = new \DateTime();
             $createdAt = $otp->created_at;
@@ -63,13 +61,28 @@ class Otp
                 $remainingMinutes = floor($remainingTime / 60);
                 $remainingSeconds = $remainingTime % 60;
 
-                $message = __('auth::otp.Next code can be generated in', [
+                return [
                     'minutes' => $remainingMinutes,
                     'seconds' => $remainingSeconds,
-                ]);
-
-                throw new \Exception($message);
+                ];
             }
+        }
+        return null;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function checkCodeIsAlreadyGenerate($retur): void
+    {
+        $validateTime = $this->calculateTime();
+        if ($validateTime) {
+            $message = __('auth::otp.Next code can be generated in', [
+                'minutes' => $validateTime['minutes'],
+                 'seconds' => $validateTime['seconds'],
+            ]);
+
+            throw new \Exception($message);
         }
     }
 
