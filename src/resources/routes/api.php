@@ -15,3 +15,8 @@ Route::prefix('register')->middleware([StartSession::class])->group(function () 
 });
 
  Route::post('/check-email', CheckEmailController::class)->name('check-email');
+
+ Route::prefix('otp')->group(function () {
+     Route::post('/expiry-time', 'OtpController@expiryTime')->name('expiry-time');
+     Route::post('/renew', 'OtpController@renew')->name('renew');
+ });

@@ -7,11 +7,10 @@ use Illuminate\Http\Request;
 
 class OtpController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
-    public function __invoke(Request $request)
-    {
-        //
+    public function expiryTime(Request $request) {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'kinb' => ['required']
+        ]);
     }
 }
