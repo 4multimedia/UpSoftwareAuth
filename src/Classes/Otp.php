@@ -70,6 +70,26 @@ class Otp
         return null;
     }
 
+    public function getTimeExpired(Kind $kind, $value) {
+        $this->kind = $kind;
+        if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            $this->email = $value;
+        } else {
+            $this->phone = $value;
+        }
+
+        $validateTime = $this->calculateTime();
+        if ($validateTime) {
+            return $validateTime;
+        } else {
+            $retry_time = config('upsoftware.otp.retry_time', 5);
+            return [
+                'minutes' => $retry_time,
+                'seconds' => 0,
+            ];
+        }
+    }
+
     /**
      * @throws \Exception
      */

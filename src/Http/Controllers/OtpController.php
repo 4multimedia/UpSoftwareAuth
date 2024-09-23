@@ -29,5 +29,7 @@ class OtpController extends Controller
             ],
             'kind' => ['required']
         ]);
+
+        return core()->otp()->getTimeExpired(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
     }
 }
