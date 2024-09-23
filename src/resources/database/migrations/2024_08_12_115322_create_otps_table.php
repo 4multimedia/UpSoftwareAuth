@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->dateTime('expired_at');
+            $table->dateTime('send_at');
             $table->dateTime('used_at')->nullable();
             $table->string('kind', 32);
             $table->string('email', 32)->nullable();

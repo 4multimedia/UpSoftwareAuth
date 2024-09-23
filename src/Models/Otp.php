@@ -13,6 +13,7 @@ class Otp extends Model
         'expired_at',
         'kind',
         'used_at',
+        'send_at',
         'kind',
         'email',
         'phone',

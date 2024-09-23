@@ -2,7 +2,7 @@
 
 namespace Upsoftware\Auth\Classes;
 
-use PhpParser\Node\Expr\Cast\Bool_;
+use Carbon\Carbon;
 use Upsoftware\Auth\Enums\OtpKind as Kind;
 use Upsoftware\Auth\Models\Otp as OtpModel;
 use Upsoftware\Auth\Models\User;
@@ -39,17 +39,18 @@ class Otp
     private function calculateTime(): ?array
     {
         $retry_time = config('upsoftware.otp.retry_time', 5);
+        $time = config('upsoftware.otp.retry_time', 5);
         $otp = OtpModel::where('kind', $this->kind)
             ->where('email', $this->email)
             ->where('phone', $this->phone)
-            ->where('created_at', '>', (new \DateTime())->modify("-{$retry_time} minutes"))
+            ->where('created_at', '>', (new \DateTime())->modify("-{$time} minutes"))
             ->first();
 
         if ($otp) {
             $now = new \DateTime();
-            $createdAt = $otp->created_at;
+            $send_at = $otp->send_at;
 
-            $interval = $now->diff($createdAt);
+            $interval = $now->diff($send_at);
 
             $seconds = $interval->s;
             $totalSeconds = $interval->days * 24 * 60 * 60 + $seconds;
@@ -101,7 +102,6 @@ class Otp
                 'minutes' => $validateTime['minutes'],
                  'seconds' => $validateTime['seconds'],
             ]);
-
             throw new \Exception($message);
         }
     }
@@ -122,6 +122,7 @@ class Otp
             'kind' => $this->kind,
             'email' => $this->email,
             'phone' => $this->phone,
+            'send_at' => Carbon::now(),
             'expired_at' => $this->setExpiredAt(),
             'code' => $this->setCode()
         ];
