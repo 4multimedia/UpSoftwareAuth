@@ -3,6 +3,7 @@
 namespace Upsoftware\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Upsoftware\Auth\Enums\OtpKind;
 use Illuminate\Http\Request;
 
 class OtpController extends Controller
@@ -35,14 +36,14 @@ class OtpController extends Controller
     public function expiryTime(Request $request): array
     {
         $this->validateRequest($request);
-        return core()->otp()->getTimeExpired(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
+        return core()->otp()->getTimeExpired(OtpKind::REGISTER, $request->email);
     }
 
     // Akcja odnawiająca OTP
     public function renew(Request $request): array
     {
         $this->validateRequest($request);
-        core()->otp()->createToken(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
-        return core()->otp()->getTimeExpired(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
+        core()->otp()->createToken(OtpKind::REGISTER, $request->email);
+        return core()->otp()->getTimeExpired(OtpKind::REGISTER, $request->email);
     }
 }

@@ -36,7 +36,7 @@ class Otp
         return $this->code = substr(str_shuffle(str_repeat($characters, $length)), 0, $length);
     }
 
-    private function calculateTime(): ?array
+    private function calculateTime(): array|null
     {
         $retry_time = config('upsoftware.otp.retry_time', 5);
         $expired_at = (new \DateTime());
@@ -45,6 +45,7 @@ class Otp
             ->where('email', $this->email)
             ->where('phone', $this->phone)
             ->where('expired_at', '>', $expired_at)
+            ->orderBy('expired_at', 'DESC')
             ->first();
 
         if ($otp) {
