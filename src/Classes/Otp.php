@@ -39,7 +39,6 @@ class Otp
     private function calculateTime(): ?array
     {
         $retry_time = config('upsoftware.otp.retry_time', 5);
-        $time = config('upsoftware.otp.time', 5);
         $expired_at = (new \DateTime());
 
         $otp = OtpModel::where('kind', $this->kind)
@@ -76,7 +75,8 @@ class Otp
         return null;
     }
 
-    public function getTimeExpired(Kind $kind, $value) {
+    public function getTimeExpired(Kind $kind, $value): array
+    {
         $this->kind = $kind;
         if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
             $this->email = $value;
