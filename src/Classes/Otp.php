@@ -39,34 +39,39 @@ class Otp
     private function calculateTime(): ?array
     {
         $retry_time = config('upsoftware.otp.retry_time', 5);
-        $time = config('upsoftware.otp.retry_time', 5);
+        $time = config('upsoftware.otp.time', 5);
+        $expired_at = (new \DateTime());
+
         $otp = OtpModel::where('kind', $this->kind)
             ->where('email', $this->email)
             ->where('phone', $this->phone)
-            ->where('created_at', '>', (new \DateTime())->modify("-{$time} minutes"))
+            ->where('expired_at', '>', $expired_at)
             ->first();
 
         if ($otp) {
-            $now = new \DateTime();
-            $send_at = $otp->send_at;
+            $now = time();
+            $send_at = strtotime($otp->send_at) + ($retry_time * 60);
+            $diff = $send_at - $now;
+            $total_seconds = $diff;
 
-            $interval = $now->diff($send_at);
-
-            $seconds = $interval->s;
-            $totalSeconds = $interval->days * 24 * 60 * 60 + $seconds;
-
-            $retryTimeInSeconds = $retry_time * 60;
-
-            if ($totalSeconds < $retryTimeInSeconds) {
-                $remainingTime = $retryTimeInSeconds - $totalSeconds;
-                $remainingMinutes = floor($remainingTime / 60);
-                $remainingSeconds = $remainingTime % 60;
-
-                return [
-                    'minutes' => $remainingMinutes,
-                    'seconds' => $remainingSeconds,
-                ];
+            if ($total_seconds < 0) {
+                return null;
             }
+
+            $hours = floor($diff / 3600);
+            $diff -= $hours * 3600;
+
+            $minutes = floor($diff / 60);
+            $diff -= $minutes * 60;
+
+            $seconds = $diff;
+
+            return [
+                'total_seconds' => $total_seconds,
+                'hours' => $hours,
+                'minutes' => $minutes,
+                'seconds' => $seconds
+            ];
         }
         return null;
     }
@@ -83,9 +88,10 @@ class Otp
         if ($validateTime) {
             return $validateTime;
         } else {
-            $retry_time = config('upsoftware.otp.retry_time', 5);
             return [
-                'minutes' => $retry_time,
+                'diff' => 0,
+                'hours' => 0,
+                'minutes' => 0,
                 'seconds' => 0,
             ];
         }

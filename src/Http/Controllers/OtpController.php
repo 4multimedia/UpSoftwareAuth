@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 
 class OtpController extends Controller
 {
-    public function expiryTime(Request $request) {
+    protected function validateRequest(Request $request): void
+    {
         $request->validate([
             'email' => [
                 'nullable',
@@ -29,7 +30,24 @@ class OtpController extends Controller
             ],
             'kind' => ['required']
         ]);
+    }
 
+    public function expiryTime(Request $request): array
+    {
+        $this->validateRequest($request);
+        return $this->getOtpExpiryTime($request);
+    }
+
+    // Akcja odnawiająca OTP
+    public function renew(Request $request): array
+    {
+        $this->validateRequest($request);
+        return $this->getOtpExpiryTime($request);
+    }
+
+
+    protected function getOtpExpiryTime(Request $request): array
+    {
         return core()->otp()->getTimeExpired(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
     }
 }
