@@ -35,6 +35,7 @@ class OtpController extends Controller
     public function expiryTime(Request $request): array
     {
         $this->validateRequest($request);
+        return core()->otp()->getTimeExpired(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
     }
 
     // Akcja odnawiająca OTP
