@@ -32,21 +32,21 @@ class OtpController extends Controller
         ]);
     }
 
-    public function expiryTime(Request $request): bool
+    public function expiryTime(Request $request): array
     {
         $this->validateRequest($request);
         return $this->createToken($request);
     }
 
     // Akcja odnawiająca OTP
-    public function renew(Request $request): bool
+    public function renew(Request $request): array
     {
         $this->validateRequest($request);
         return $this->createToken($request);
     }
 
 
-    protected function createToken(Request $request): bool
+    protected function createToken(Request $request): array
     {
         return core()->otp()->createToken(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email, true);
     }
