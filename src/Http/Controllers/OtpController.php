@@ -48,6 +48,6 @@ class OtpController extends Controller
 
     protected function createToken(Request $request): bool
     {
-        return core()->otp()->createToken(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email);
+        return core()->otp()->createToken(\Upsoftware\Auth\Enums\OtpKind::REGISTER, $request->email, true);
     }
 }

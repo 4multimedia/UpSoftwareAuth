@@ -115,7 +115,7 @@ class Otp
     /**
      * @throws \Exception
      */
-    public function createToken(Kind $kind, $value): Bool
+    public function createToken(Kind $kind, $value, $time = false): Bool
     {
         $this->kind = $kind;
         if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
@@ -145,6 +145,9 @@ class Otp
                 OtpModel::create($data);
             }
             $this->sendToken();
+            if ($time) {
+                return $this->calculateTime();
+            }
             return true;
         } catch (\Exception $e) {
             return false;
