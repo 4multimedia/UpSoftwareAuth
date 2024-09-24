@@ -115,7 +115,7 @@ class Otp
     /**
      * @throws \Exception
      */
-    public function createToken(Kind $kind, $value, $time = false): void
+    public function createToken(Kind $kind, $value, $time = false): bool|array|null
     {
         $this->kind = $kind;
         if (filter_var($value, FILTER_VALIDATE_EMAIL)) {
