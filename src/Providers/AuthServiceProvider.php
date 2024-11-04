@@ -20,7 +20,8 @@ class AuthServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                \Upsoftware\Auth\Console\Commands\UpSoftwareMakeUserRole::class
+                \Upsoftware\Auth\Console\Commands\UpSoftwareMakeUser::class,
+                \Upsoftware\Auth\Console\Commands\UpSoftwareMakeUserRole::class,
             ]);
         }
     }
