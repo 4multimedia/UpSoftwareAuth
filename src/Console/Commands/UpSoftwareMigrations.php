@@ -7,7 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 
 class UpSoftwareMigrations extends Command
 {
-    protected $signature = 'upsoftware:migrations.auth {--tenants}';
+    protected $signature = 'upsoftware:migrations.auth {--tenant}';
 
     public function handle()
     {
@@ -22,8 +22,8 @@ class UpSoftwareMigrations extends Command
             return;
         }
 
-        if (in_array('--tenants', $_SERVER['argv'])) {
-            $destinationPath = database_path('migrations/tenants');
+        if (in_array('--tenant', $_SERVER['argv'])) {
+            $destinationPath = database_path('migrations/tenant');
         } else {
             $destinationPath = database_path('migrations');
         }
