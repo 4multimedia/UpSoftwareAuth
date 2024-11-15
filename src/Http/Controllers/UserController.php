@@ -12,15 +12,14 @@ class UserController extends Controller
     {
         $user = $request->user();
         $token = $request->bearerToken();
+
+        $resorce = config('upsoftware.user.resource', UserResource::class);
+
         return [
             'status' => 'success',
             'message' => trans('auth::messages.The user has been authorized'),
-            'user' => new UserResource($user),
-            'token' => $token,
-            'roles' => $user->roles->map(fn($role) => [
-                'id' => $role->id,
-                'name' => $role->name
-            ]),
+            'user' => new $resorce($user),
+            'token' => $token
         ];
     }
 }
