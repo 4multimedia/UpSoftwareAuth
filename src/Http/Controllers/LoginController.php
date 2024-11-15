@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Upsoftware\Auth\Contracts\Requests\LoginUser;
 use Upsoftware\Auth\Contracts\Requests\LoginUserOtp;
 use Upsoftware\Auth\Enums\OtpKind;
+use Upsoftware\Auth\Http\Resources\UserResource;
 use Upsoftware\Auth\Models\User;
 
 class LoginController extends Controller
@@ -74,15 +75,13 @@ class LoginController extends Controller
     private function generateAuthTokenResponse(User $user)
     {
         $token = $user->createToken('auth_token')->plainTextToken;
+        $resorce = config('upsoftware.user.resource', UserResource::class);
+
         return [
             'status' => 'success',
             'message' => trans('auth::messages.The user has been logged in'),
-            'user' => $user,
+            'user' => new $resorce($user),
             'token' => $token,
-            'roles' => $user->roles->map(fn($role) => [
-                'id' => $role->id,
-                'name' => $role->name
-            ]),
         ];
     }
 

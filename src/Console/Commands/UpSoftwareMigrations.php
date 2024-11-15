@@ -7,7 +7,9 @@ use Illuminate\Filesystem\Filesystem;
 
 class UpSoftwareMigrations extends Command
 {
-    protected $signature = 'upsoftware:migrations.auth {--tenant}';
+    protected $signature = 'upsoftware:migrations.auth { --tenant : If use tenancy }';
+
+    protected $description = 'Copy auth migration [--tenant : If use tenancy]';
 
     public function handle()
     {

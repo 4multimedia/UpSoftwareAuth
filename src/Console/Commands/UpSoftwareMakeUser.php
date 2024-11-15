@@ -15,10 +15,8 @@ class UpSoftwareMakeUser extends Command
     {
         $email = $this->ask('Address e-mail');
         $password = $this->ask('Password');
-        $name = $this->ask('Name');
 
         User::create([
-            'name' => $name,
             'email' => $email,
             'password' => Hash::make($password)
         ]);

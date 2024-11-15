@@ -16,9 +16,12 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->hash,
-            'roles' => $this->roles,
             'email' => $this->email,
-            'created_at' => $this->created_at
+            'created_at' => $this->created_at,
+            'roles' => $this->roles->map(fn($role) => [
+                'id' => $role->id,
+                'name' => $role->name
+            ])
         ];
     }
 }
