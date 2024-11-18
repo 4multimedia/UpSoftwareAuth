@@ -72,7 +72,7 @@ class User extends UserBaseModel
                 'id' => $domain->id,
                 'domain' => $domain->domain
             ]);
-            $rolesByTenant[$tenantId]["roles"] = [
+            $rolesByTenant[$tenantId]["roles"][] = [
                 'id' => $role->id,
                 'name' => $role->name,
             ];
