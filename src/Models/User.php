@@ -3,11 +3,20 @@
 namespace Upsoftware\Auth\Models;
 
 use App\Models\User as UserBaseModel;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
+use Upsoftware\Core\Models\Tenant;
 
 class User extends UserBaseModel
 {
     use HasApiTokens;
+
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'role_user', 'user_id', 'tenant_id')
+            ->withPivot('role_id')
+            ->withTimestamps();
+    }
 
     public function getFillable()
     {
@@ -22,27 +31,28 @@ class User extends UserBaseModel
 
     protected function casts(): array
     {
-        // Pobranie dodatkowych rzutowań z konfiguracji
         $additionalCasts = config('upsoftware_auth.casts', []);
 
-        // Iterowanie przez additional_fields i dodanie rzutowania na JSON dla tablic
         $additionalFields = config('upsoftware_auth.additional_fields', []);
         $castsForArrays = [];
 
         foreach ($additionalFields as $key => $field) {
             if (is_array($field)) {
-                // Jeśli pole jest tablicą (np. company), rzutuj je jako JSON
                 $castsForArrays[$key] = 'json';
             }
         }
 
         $defaultCasts = ['data' => 'json'];
 
-        // Połączenie rzutowań z bazowego modelu z dodatkowymi rzutowaniami i tymi z tablic
         return array_merge(parent::casts(), $additionalCasts, $castsForArrays, $defaultCasts);
     }
 
     public function roles() {
-        return $this->belongsToMany(Role::class);
+        if (config('upsoftware.tenancy')) {
+            return $this->belongsToMany(Tenant::class, 'role_user', 'role_id', 'tenant_id')
+                ->withPivot('user_id');
+        } else {
+            return $this->belongsToMany(Role::class);
+        }
     }
 }
