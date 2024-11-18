@@ -49,10 +49,35 @@ class User extends UserBaseModel
 
     public function roles() {
         if (config('upsoftware.tenancy')) {
-            return $this->belongsToMany(Tenant::class, 'role_user', 'role_id', 'tenant_id')
-                ->withPivot('user_id');
+            return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id')
+                ->withPivot('tenant_id')
+                ->withTimestamps();
         } else {
             return $this->belongsToMany(Role::class);
         }
+    }
+
+    public function rolesByTenant()
+    {
+        $rolesByTenant = [];
+
+        foreach ($this->roles as $role) {
+            $tenantId = $role->pivot->tenant_id;
+            $tenant = Tenant::find($tenantId);
+            $rolesByTenant[$tenantId]["info"] = [
+                "id" => $tenant->id,
+                "name" => $tenant->name ?? null
+            ];
+            $rolesByTenant[$tenantId]["domains"] = $tenant->domains->map(fn($domain) => [
+                'id' => $domain->id,
+                'domain' => $domain->domain
+            ]);
+            $rolesByTenant[$tenantId]["roles"] = [
+                'id' => $role->id,
+                'name' => $role->name,
+            ];
+        }
+
+        return $rolesByTenant;
     }
 }
