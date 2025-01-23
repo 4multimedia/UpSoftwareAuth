@@ -14,9 +14,15 @@ Route::prefix('register')->middleware([StartSession::class])->group(function () 
     Route::post('/', 'RegisterController@register')->name('register');
 });
 
- Route::post('/check-email', CheckEmailController::class)->name('check-email');
+Route::prefix('reset')->middleware([StartSession::class])->group(function () {
+    Route::post('/', 'ResetController@reset')->name('reset');
+    Route::post('/validate', 'ResetController@validate')->name('reset.validate');
+    Route::post('/store', 'ResetController@store')->name('reset.store');
+});
 
- Route::prefix('otp')->group(function () {
+Route::post('/check-email', CheckEmailController::class)->name('check-email');
+
+Route::prefix('otp')->group(function () {
      Route::post('/expiry-time', 'OtpController@expiryTime')->name('expiry-time');
      Route::post('/renew', 'OtpController@renew')->name('renew');
  });
